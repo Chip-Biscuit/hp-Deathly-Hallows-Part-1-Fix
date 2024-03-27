@@ -6,6 +6,8 @@ https://github.com/ThirteenAG/d3d9-wrapper
 
 simply put the d3d9.dll and d3d9.ini into your game folder next to the game exe and your good to go 
 
+FOV is edited so that its not so zoomed in with this fix
+
 you can edit settings in d3d9.ini 
 
 Default aspect ratio is 0 which is (16:9)
