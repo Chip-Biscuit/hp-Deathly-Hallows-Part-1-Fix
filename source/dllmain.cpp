@@ -59,7 +59,7 @@ float fFPSLimit;
 int nFullScreenRefreshRateInHz;
 int nForceWindowStyle;
 
-char WinDir[MAX_PATH+1];
+char WinDir[MAX_PATH + 1];
 
 // chip - adding macros
 # define DX_PRINT(x) std::cout << x << std::endl;
@@ -69,7 +69,7 @@ char WinDir[MAX_PATH+1];
 
 // List of registered window classes and procedures
 // WORD classAtom, ULONG_PTR WndProcPtr
-std::vector<std::pair<WORD,ULONG_PTR>> WndProcList;
+std::vector<std::pair<WORD, ULONG_PTR>> WndProcList;
 
 //=========================================================================================================================================================================================================
 //chip
@@ -362,7 +362,7 @@ public:
             RECT rect;
             device->GetCreationParameters(&cparams);
             GetClientRect(cparams.hFocusWindow, &rect);
-            
+
             D3DXFONT_DESC fps_font;
             ZeroMemory(&fps_font, sizeof(D3DXFONT_DESC));
             fps_font.Height = rect.bottom / 20;
@@ -390,32 +390,32 @@ public:
         else
         {
             auto DrawTextOutline = [](ID3DXFont* pFont, FLOAT X, FLOAT Y, D3DXCOLOR dColor, CONST PCHAR cString, ...)
-            {
-                const D3DXCOLOR BLACK(D3DCOLOR_XRGB(0, 0, 0));
-                CHAR cBuffer[101] = "";
-
-                va_list oArgs;
-                va_start(oArgs, cString);
-                _vsnprintf((cBuffer + strlen(cBuffer)), (sizeof(cBuffer) - strlen(cBuffer)), cString, oArgs);
-                va_end(oArgs);
-
-                RECT Rect[5] =
                 {
-                    { X - 1, Y, X + 500.0f, Y + 50.0f },
-                    { X, Y - 1, X + 500.0f, Y + 50.0f },
-                    { X + 1, Y, X + 500.0f, Y + 50.0f },
-                    { X, Y + 1, X + 500.0f, Y + 50.0f },
-                    { X, Y, X + 500.0f, Y + 50.0f },
+                    const D3DXCOLOR BLACK(D3DCOLOR_XRGB(0, 0, 0));
+                    CHAR cBuffer[101] = "";
+
+                    va_list oArgs;
+                    va_start(oArgs, cString);
+                    _vsnprintf((cBuffer + strlen(cBuffer)), (sizeof(cBuffer) - strlen(cBuffer)), cString, oArgs);
+                    va_end(oArgs);
+
+                    RECT Rect[5] =
+                    {
+                        { X - 1, Y, X + 500.0f, Y + 50.0f },
+                        { X, Y - 1, X + 500.0f, Y + 50.0f },
+                        { X + 1, Y, X + 500.0f, Y + 50.0f },
+                        { X, Y + 1, X + 500.0f, Y + 50.0f },
+                        { X, Y, X + 500.0f, Y + 50.0f },
+                    };
+
+                    if (dColor != BLACK)
+                    {
+                        for (auto i = 0; i < 4; i++)
+                            pFont->DrawText(NULL, cBuffer, -1, &Rect[i], DT_NOCLIP, BLACK);
+                    }
+
+                    pFont->DrawText(NULL, cBuffer, -1, &Rect[4], DT_NOCLIP, dColor);
                 };
-
-                if (dColor != BLACK)
-                {
-                    for (auto i = 0; i < 4; i++)
-                        pFont->DrawText(NULL, cBuffer, -1, &Rect[i], DT_NOCLIP, BLACK);
-                }
-
-                pFont->DrawText(NULL, cBuffer, -1, &Rect[4], DT_NOCLIP, dColor);
-            };
 
             static char str_format_fps[] = "%02d";
             static char str_format_time[] = "%.01f ms";
@@ -460,11 +460,11 @@ HRESULT m_IDirect3DDevice9Ex::EndScene()
 {
     if (bDisplayFPSCounter)
         FrameLimiter::ShowFPS(ProxyInterface);
-    
+
     return ProxyInterface->EndScene();
 }
 
-void ForceWindowed(D3DPRESENT_PARAMETERS* pPresentationParameters, D3DDISPLAYMODEEX* pFullscreenDisplayMode = NULL)
+void ForceWindowed(D3DPRESENT_PARAMETERS* pPresentationParameters, D3DDISPLAYMODEEX* pFullscreenDisplayMode = nullptr)
 {
     HWND hwnd = pPresentationParameters->hDeviceWindow ? pPresentationParameters->hDeviceWindow : g_hFocusWindow;
     HMONITOR monitor = MonitorFromWindow((!bUsePrimaryMonitor && hwnd) ? hwnd : GetDesktopWindow(), MONITOR_DEFAULTTONEAREST);
@@ -484,15 +484,11 @@ void ForceWindowed(D3DPRESENT_PARAMETERS* pPresentationParameters, D3DDISPLAYMOD
     }
 
     pPresentationParameters->Windowed = 1;
-
-    // This must be set to default (0) on windowed mode as per D3D9 spec
     pPresentationParameters->FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
 
-    // If exists, this must match the rate in PresentationParameters
     if (pFullscreenDisplayMode != NULL)
         pFullscreenDisplayMode->RefreshRate = D3DPRESENT_RATE_DEFAULT;
 
-    // This flag is not available on windowed mode as per D3D9 spec
     pPresentationParameters->PresentationInterval &= ~D3DPRESENT_DONOTFLIP;
 
     if (hwnd != NULL)
@@ -539,6 +535,18 @@ void ForceWindowed(D3DPRESENT_PARAMETERS* pPresentationParameters, D3DDISPLAYMOD
             }
         }
         SetWindowPos(hwnd, bAlwaysOnTop ? HWND_TOPMOST : HWND_NOTOPMOST, left, top, cx, cy, uFlags);
+
+        // Release the cursor confinement when the game window loses focus
+        if (GetForegroundWindow() != hwnd)
+            ClipCursor(nullptr);
+        else {
+            // Clip the cursor to the game window
+            RECT windowRect;
+            GetClientRect(hwnd, &windowRect);
+            ClientToScreen(hwnd, reinterpret_cast<POINT*>(&windowRect.left));
+            ClientToScreen(hwnd, reinterpret_cast<POINT*>(&windowRect.right));
+            ClipCursor(&windowRect);
+        }
     }
 }
 
@@ -583,7 +591,7 @@ HRESULT m_IDirect3D9Ex::CreateDevice(UINT Adapter, D3DDEVTYPE DeviceType, HWND h
 
     if (nFullScreenRefreshRateInHz)
         ForceFullScreenRefreshRateInHz(pPresentationParameters);
-    
+
     if (bDisplayFPSCounter)
     {
         if (FrameLimiter::pFPSFont)
@@ -621,7 +629,7 @@ HRESULT m_IDirect3DDevice9Ex::Reset(D3DPRESENT_PARAMETERS* pPresentationParamete
     }
 
     auto hRet = ProxyInterface->Reset(pPresentationParameters);
-    
+
     if (bDisplayFPSCounter)
     {
         if (SUCCEEDED(hRet))
@@ -632,7 +640,7 @@ HRESULT m_IDirect3DDevice9Ex::Reset(D3DPRESENT_PARAMETERS* pPresentationParamete
                 FrameLimiter::pTimeFont->OnResetDevice();
         }
     }
-    
+
     return hRet;
 }
 
@@ -674,7 +682,7 @@ HRESULT m_IDirect3DDevice9Ex::ResetEx(THIS_ D3DPRESENT_PARAMETERS* pPresentation
 
     if (nFullScreenRefreshRateInHz)
         ForceFullScreenRefreshRateInHz(pPresentationParameters);
-    
+
     if (bDisplayFPSCounter)
     {
         if (FrameLimiter::pFPSFont)
@@ -710,37 +718,37 @@ LRESULT WINAPI CustomWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
         }
         switch (uMsg)
         {
-            case WM_ACTIVATE:
-                if (LOWORD(wParam) == WA_INACTIVE)
-                {
-                    if ((HWND)lParam == NULL)
-                        return 0;
-                    DWORD dwPID = 0;
-                    GetWindowThreadProcessId((HWND)lParam, &dwPID);
-                    if (dwPID != GetCurrentProcessId())
-                        return 0;
-                }
-                break;
-            case WM_NCACTIVATE:
-                if (LOWORD(wParam) == WA_INACTIVE)
-                    return 0;
-                break;
-            case WM_ACTIVATEAPP:
-                if (wParam == FALSE)
-                    return 0;
-                break;
-            case WM_KILLFOCUS:
-                {
-                if ((HWND)wParam == NULL)
+        case WM_ACTIVATE:
+            if (LOWORD(wParam) == WA_INACTIVE)
+            {
+                if ((HWND)lParam == NULL)
                     return 0;
                 DWORD dwPID = 0;
-                GetWindowThreadProcessId((HWND)wParam, &dwPID);
+                GetWindowThreadProcessId((HWND)lParam, &dwPID);
                 if (dwPID != GetCurrentProcessId())
                     return 0;
-                }
-                break;
-            default:
-                break;
+            }
+            break;
+        case WM_NCACTIVATE:
+            if (LOWORD(wParam) == WA_INACTIVE)
+                return 0;
+            break;
+        case WM_ACTIVATEAPP:
+            if (wParam == FALSE)
+                return 0;
+            break;
+        case WM_KILLFOCUS:
+        {
+            if ((HWND)wParam == NULL)
+                return 0;
+            DWORD dwPID = 0;
+            GetWindowThreadProcessId((HWND)wParam, &dwPID);
+            if (dwPID != GetCurrentProcessId())
+                return 0;
+        }
+        break;
+        default:
+            break;
         }
     }
     WNDPROC OrigProc = WNDPROC(WndProcList[idx].second);
@@ -1135,135 +1143,135 @@ bool WINAPI DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved)
 {
     switch (dwReason)
     {
-        case DLL_PROCESS_ATTACH:
+    case DLL_PROCESS_ATTACH:
+    {
+        g_hWrapperModule = hModule;
+
+        // Load dll
+        char path[MAX_PATH];
+        GetSystemDirectoryA(path, MAX_PATH);
+        strcat_s(path, "\\d3d9.dll");
+        d3d9dll = LoadLibraryA(path);
+
+        //chip
+        if (dwReason == DLL_PROCESS_ATTACH) {
+            // Perform hex edits when DLL is attached to a process
+            PerformHexEdits();
+
+            PerformHexEdits2();
+
+        }
+        //chip
+
+        if (d3d9dll)
         {
-            g_hWrapperModule = hModule;
-        
-            // Load dll
-            char path[MAX_PATH];
-            GetSystemDirectoryA(path, MAX_PATH);
-            strcat_s(path, "\\d3d9.dll");
-            d3d9dll = LoadLibraryA(path);
+            // Get function addresses
+            m_pDirect3DShaderValidatorCreate9 = (Direct3DShaderValidatorCreate9Proc)GetProcAddress(d3d9dll, "Direct3DShaderValidatorCreate9");
+            m_pPSGPError = (PSGPErrorProc)GetProcAddress(d3d9dll, "PSGPError");
+            m_pPSGPSampleTexture = (PSGPSampleTextureProc)GetProcAddress(d3d9dll, "PSGPSampleTexture");
+            m_pD3DPERF_BeginEvent = (D3DPERF_BeginEventProc)GetProcAddress(d3d9dll, "D3DPERF_BeginEvent");
+            m_pD3DPERF_EndEvent = (D3DPERF_EndEventProc)GetProcAddress(d3d9dll, "D3DPERF_EndEvent");
+            m_pD3DPERF_GetStatus = (D3DPERF_GetStatusProc)GetProcAddress(d3d9dll, "D3DPERF_GetStatus");
+            m_pD3DPERF_QueryRepeatFrame = (D3DPERF_QueryRepeatFrameProc)GetProcAddress(d3d9dll, "D3DPERF_QueryRepeatFrame");
+            m_pD3DPERF_SetMarker = (D3DPERF_SetMarkerProc)GetProcAddress(d3d9dll, "D3DPERF_SetMarker");
+            m_pD3DPERF_SetOptions = (D3DPERF_SetOptionsProc)GetProcAddress(d3d9dll, "D3DPERF_SetOptions");
+            m_pD3DPERF_SetRegion = (D3DPERF_SetRegionProc)GetProcAddress(d3d9dll, "D3DPERF_SetRegion");
+            m_pDebugSetLevel = (DebugSetLevelProc)GetProcAddress(d3d9dll, "DebugSetLevel");
+            m_pDebugSetMute = (DebugSetMuteProc)GetProcAddress(d3d9dll, "DebugSetMute");
+            m_pDirect3D9EnableMaximizedWindowedModeShim = (Direct3D9EnableMaximizedWindowedModeShimProc)GetProcAddress(d3d9dll, "Direct3D9EnableMaximizedWindowedModeShim");
+            m_pDirect3DCreate9 = (Direct3DCreate9Proc)GetProcAddress(d3d9dll, "Direct3DCreate9");
+            m_pDirect3DCreate9Ex = (Direct3DCreate9ExProc)GetProcAddress(d3d9dll, "Direct3DCreate9Ex");
 
-            //chip
-            if (dwReason == DLL_PROCESS_ATTACH) {
-                // Perform hex edits when DLL is attached to a process
-                PerformHexEdits();
+            // ini
+            HMODULE hm = NULL;
+            GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (LPCSTR)&Direct3DCreate9, &hm);
+            GetModuleFileNameA(hm, path, sizeof(path));
+            strcpy(strrchr(path, '\\'), "\\d3d9.ini");
+            bForceWindowedMode = GetPrivateProfileInt("MAIN", "ForceWindowedMode", 0, path) != 0;
+            fFPSLimit = static_cast<float>(GetPrivateProfileInt("MAIN", "FPSLimit", 0, path));
+            nFullScreenRefreshRateInHz = GetPrivateProfileInt("MAIN", "FullScreenRefreshRateInHz", 0, path);
+            bDisplayFPSCounter = GetPrivateProfileInt("MAIN", "DisplayFPSCounter", 0, path);
+            bUsePrimaryMonitor = GetPrivateProfileInt("FORCEWINDOWED", "UsePrimaryMonitor", 0, path) != 0;
+            bCenterWindow = GetPrivateProfileInt("FORCEWINDOWED", "CenterWindow", 1, path) != 0;
+            bAlwaysOnTop = GetPrivateProfileInt("FORCEWINDOWED", "AlwaysOnTop", 0, path) != 0;
+            bDoNotNotifyOnTaskSwitch = GetPrivateProfileInt("FORCEWINDOWED", "DoNotNotifyOnTaskSwitch", 0, path) != 0;
+            nForceWindowStyle = GetPrivateProfileInt("FORCEWINDOWED", "ForceWindowStyle", 0, path);
 
-                PerformHexEdits2();
-
-            }
-            //chip
-
-            if (d3d9dll)
+            if (fFPSLimit > 0.0f)
             {
-                // Get function addresses
-                m_pDirect3DShaderValidatorCreate9 = (Direct3DShaderValidatorCreate9Proc)GetProcAddress(d3d9dll, "Direct3DShaderValidatorCreate9");
-                m_pPSGPError = (PSGPErrorProc)GetProcAddress(d3d9dll, "PSGPError");
-                m_pPSGPSampleTexture = (PSGPSampleTextureProc)GetProcAddress(d3d9dll, "PSGPSampleTexture");
-                m_pD3DPERF_BeginEvent = (D3DPERF_BeginEventProc)GetProcAddress(d3d9dll, "D3DPERF_BeginEvent");
-                m_pD3DPERF_EndEvent = (D3DPERF_EndEventProc)GetProcAddress(d3d9dll, "D3DPERF_EndEvent");
-                m_pD3DPERF_GetStatus = (D3DPERF_GetStatusProc)GetProcAddress(d3d9dll, "D3DPERF_GetStatus");
-                m_pD3DPERF_QueryRepeatFrame = (D3DPERF_QueryRepeatFrameProc)GetProcAddress(d3d9dll, "D3DPERF_QueryRepeatFrame");
-                m_pD3DPERF_SetMarker = (D3DPERF_SetMarkerProc)GetProcAddress(d3d9dll, "D3DPERF_SetMarker");
-                m_pD3DPERF_SetOptions = (D3DPERF_SetOptionsProc)GetProcAddress(d3d9dll, "D3DPERF_SetOptions");
-                m_pD3DPERF_SetRegion = (D3DPERF_SetRegionProc)GetProcAddress(d3d9dll, "D3DPERF_SetRegion");
-                m_pDebugSetLevel = (DebugSetLevelProc)GetProcAddress(d3d9dll, "DebugSetLevel");
-                m_pDebugSetMute = (DebugSetMuteProc)GetProcAddress(d3d9dll, "DebugSetMute");
-                m_pDirect3D9EnableMaximizedWindowedModeShim = (Direct3D9EnableMaximizedWindowedModeShimProc)GetProcAddress(d3d9dll, "Direct3D9EnableMaximizedWindowedModeShim");
-                m_pDirect3DCreate9 = (Direct3DCreate9Proc)GetProcAddress(d3d9dll, "Direct3DCreate9");
-                m_pDirect3DCreate9Ex = (Direct3DCreate9ExProc)GetProcAddress(d3d9dll, "Direct3DCreate9Ex");
+                FrameLimiter::FPSLimitMode mode = (GetPrivateProfileInt("MAIN", "FPSLimitMode", 1, path) == 2) ? FrameLimiter::FPSLimitMode::FPS_ACCURATE : FrameLimiter::FPSLimitMode::FPS_REALTIME;
+                if (mode == FrameLimiter::FPSLimitMode::FPS_ACCURATE)
+                    timeBeginPeriod(1);
 
-                // ini
-                HMODULE hm = NULL;
-                GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (LPCSTR)&Direct3DCreate9, &hm);
-                GetModuleFileNameA(hm, path, sizeof(path));
-                strcpy(strrchr(path, '\\'), "\\d3d9.ini");
-                bForceWindowedMode = GetPrivateProfileInt("MAIN", "ForceWindowedMode", 0, path) != 0;
-                fFPSLimit = static_cast<float>(GetPrivateProfileInt("MAIN", "FPSLimit", 0, path));
-                nFullScreenRefreshRateInHz = GetPrivateProfileInt("MAIN", "FullScreenRefreshRateInHz", 0, path);
-                bDisplayFPSCounter = GetPrivateProfileInt("MAIN", "DisplayFPSCounter", 0, path);
-                bUsePrimaryMonitor = GetPrivateProfileInt("FORCEWINDOWED", "UsePrimaryMonitor", 0, path) != 0;
-                bCenterWindow = GetPrivateProfileInt("FORCEWINDOWED", "CenterWindow", 1, path) != 0;
-                bAlwaysOnTop = GetPrivateProfileInt("FORCEWINDOWED", "AlwaysOnTop", 0, path) != 0;
-                bDoNotNotifyOnTaskSwitch = GetPrivateProfileInt("FORCEWINDOWED", "DoNotNotifyOnTaskSwitch", 0, path) != 0;
-                nForceWindowStyle = GetPrivateProfileInt("FORCEWINDOWED", "ForceWindowStyle", 0, path);
+                FrameLimiter::Init(mode);
+                mFPSLimitMode = mode;
+            }
+            else
+                mFPSLimitMode = FrameLimiter::FPSLimitMode::FPS_NONE;
 
-                if (fFPSLimit > 0.0f)
-                {
-                    FrameLimiter::FPSLimitMode mode = (GetPrivateProfileInt("MAIN", "FPSLimitMode", 1, path) == 2) ? FrameLimiter::FPSLimitMode::FPS_ACCURATE : FrameLimiter::FPSLimitMode::FPS_REALTIME;
-                    if (mode == FrameLimiter::FPSLimitMode::FPS_ACCURATE)
-                        timeBeginPeriod(1);
+            if (bDoNotNotifyOnTaskSwitch)
+            {
+                GetSystemWindowsDirectoryA(WinDir, MAX_PATH);
 
-                    FrameLimiter::Init(mode);
-                    mFPSLimitMode = mode;
-                }
+                oRegisterClassA = (RegisterClassA_fn)Iat_hook::detour_iat_ptr("RegisterClassA", (void*)hk_RegisterClassA);
+                oRegisterClassW = (RegisterClassW_fn)Iat_hook::detour_iat_ptr("RegisterClassW", (void*)hk_RegisterClassW);
+                oRegisterClassExA = (RegisterClassExA_fn)Iat_hook::detour_iat_ptr("RegisterClassExA", (void*)hk_RegisterClassExA);
+                oRegisterClassExW = (RegisterClassExW_fn)Iat_hook::detour_iat_ptr("RegisterClassExW", (void*)hk_RegisterClassExW);
+                oGetForegroundWindow = (GetForegroundWindow_fn)Iat_hook::detour_iat_ptr("GetForegroundWindow", (void*)hk_GetForegroundWindow);
+                oGetActiveWindow = (GetActiveWindow_fn)Iat_hook::detour_iat_ptr("GetActiveWindow", (void*)hk_GetActiveWindow);
+                oGetFocus = (GetFocus_fn)Iat_hook::detour_iat_ptr("GetFocus", (void*)hk_GetFocus);
+                oLoadLibraryA = (LoadLibraryA_fn)Iat_hook::detour_iat_ptr("LoadLibraryA", (void*)hk_LoadLibraryA);
+                oLoadLibraryW = (LoadLibraryW_fn)Iat_hook::detour_iat_ptr("LoadLibraryW", (void*)hk_LoadLibraryW);
+                oLoadLibraryExA = (LoadLibraryExA_fn)Iat_hook::detour_iat_ptr("LoadLibraryExA", (void*)hk_LoadLibraryExA);
+                oLoadLibraryExW = (LoadLibraryExW_fn)Iat_hook::detour_iat_ptr("LoadLibraryExW", (void*)hk_LoadLibraryExW);
+                oFreeLibrary = (FreeLibrary_fn)Iat_hook::detour_iat_ptr("FreeLibrary", (void*)hk_FreeLibrary);
+
+                Iat_hook::detour_iat_ptr("GetProcAddress", (void*)hk_GetProcAddress);
+                Iat_hook::detour_iat_ptr("GetProcAddress", (void*)hk_GetProcAddress, d3d9dll);
+
+                if (oGetForegroundWindow == NULL)
+                    oGetForegroundWindow = (GetForegroundWindow_fn)Iat_hook::detour_iat_ptr("GetForegroundWindow", (void*)hk_GetForegroundWindow, d3d9dll);
                 else
-                    mFPSLimitMode = FrameLimiter::FPSLimitMode::FPS_NONE;
+                    Iat_hook::detour_iat_ptr("GetForegroundWindow", (void*)hk_GetForegroundWindow, d3d9dll);
 
-                if (bDoNotNotifyOnTaskSwitch)
-                {
-                    GetSystemWindowsDirectoryA(WinDir, MAX_PATH);
-
-                    oRegisterClassA = (RegisterClassA_fn)Iat_hook::detour_iat_ptr("RegisterClassA", (void*)hk_RegisterClassA);
-                    oRegisterClassW = (RegisterClassW_fn)Iat_hook::detour_iat_ptr("RegisterClassW", (void*)hk_RegisterClassW);
-                    oRegisterClassExA = (RegisterClassExA_fn)Iat_hook::detour_iat_ptr("RegisterClassExA", (void*)hk_RegisterClassExA);
-                    oRegisterClassExW = (RegisterClassExW_fn)Iat_hook::detour_iat_ptr("RegisterClassExW", (void*)hk_RegisterClassExW);
-                    oGetForegroundWindow = (GetForegroundWindow_fn)Iat_hook::detour_iat_ptr("GetForegroundWindow", (void*)hk_GetForegroundWindow);
-                    oGetActiveWindow = (GetActiveWindow_fn)Iat_hook::detour_iat_ptr("GetActiveWindow", (void*)hk_GetActiveWindow);
-                    oGetFocus = (GetFocus_fn)Iat_hook::detour_iat_ptr("GetFocus", (void*)hk_GetFocus);
-                    oLoadLibraryA = (LoadLibraryA_fn)Iat_hook::detour_iat_ptr("LoadLibraryA", (void*)hk_LoadLibraryA);
-                    oLoadLibraryW = (LoadLibraryW_fn)Iat_hook::detour_iat_ptr("LoadLibraryW", (void*)hk_LoadLibraryW);
-                    oLoadLibraryExA = (LoadLibraryExA_fn)Iat_hook::detour_iat_ptr("LoadLibraryExA", (void*)hk_LoadLibraryExA);
-                    oLoadLibraryExW = (LoadLibraryExW_fn)Iat_hook::detour_iat_ptr("LoadLibraryExW", (void*)hk_LoadLibraryExW);
-                    oFreeLibrary = (FreeLibrary_fn)Iat_hook::detour_iat_ptr("FreeLibrary", (void*)hk_FreeLibrary);
-
-                    Iat_hook::detour_iat_ptr("GetProcAddress", (void*)hk_GetProcAddress);
-                    Iat_hook::detour_iat_ptr("GetProcAddress", (void*)hk_GetProcAddress, d3d9dll);
-
-                    if (oGetForegroundWindow == NULL)
-                        oGetForegroundWindow = (GetForegroundWindow_fn)Iat_hook::detour_iat_ptr("GetForegroundWindow", (void*)hk_GetForegroundWindow, d3d9dll);
+                HMODULE ole32 = GetModuleHandleA("ole32.dll");
+                if (ole32) {
+                    if (oRegisterClassA == NULL)
+                        oRegisterClassA = (RegisterClassA_fn)Iat_hook::detour_iat_ptr("RegisterClassA", (void*)hk_RegisterClassA, ole32);
                     else
-                        Iat_hook::detour_iat_ptr("GetForegroundWindow", (void*)hk_GetForegroundWindow, d3d9dll);
-
-                    HMODULE ole32 = GetModuleHandleA("ole32.dll");
-                    if (ole32) {
-                        if (oRegisterClassA == NULL)
-                            oRegisterClassA = (RegisterClassA_fn)Iat_hook::detour_iat_ptr("RegisterClassA", (void*)hk_RegisterClassA, ole32);
-                        else
-                            Iat_hook::detour_iat_ptr("RegisterClassA", (void*)hk_RegisterClassA, ole32);
-                        if (oRegisterClassW == NULL)
-                            oRegisterClassW = (RegisterClassW_fn)Iat_hook::detour_iat_ptr("RegisterClassW", (void*)hk_RegisterClassW, ole32);
-                        else
-                            Iat_hook::detour_iat_ptr("RegisterClassW", (void*)hk_RegisterClassW, ole32);
-                        if (oRegisterClassExA == NULL)
-                            oRegisterClassExA = (RegisterClassExA_fn)Iat_hook::detour_iat_ptr("RegisterClassExA", (void*)hk_RegisterClassExA, ole32);
-                        else
-                            Iat_hook::detour_iat_ptr("RegisterClassExA", (void*)hk_RegisterClassExA, ole32);
-                        if (oRegisterClassExW == NULL)
-                            oRegisterClassExW = (RegisterClassExW_fn)Iat_hook::detour_iat_ptr("RegisterClassExW", (void*)hk_RegisterClassExW, ole32);
-                        else
-                            Iat_hook::detour_iat_ptr("RegisterClassExW", (void*)hk_RegisterClassExW, ole32);
-                        if (oGetActiveWindow == NULL)
-                            oGetActiveWindow = (GetActiveWindow_fn)Iat_hook::detour_iat_ptr("GetActiveWindow", (void*)hk_GetActiveWindow, ole32);
-                        else
-                            Iat_hook::detour_iat_ptr("GetActiveWindow", (void*)hk_GetActiveWindow, ole32);
-                    }
-
-                    HookImportedModules();
+                        Iat_hook::detour_iat_ptr("RegisterClassA", (void*)hk_RegisterClassA, ole32);
+                    if (oRegisterClassW == NULL)
+                        oRegisterClassW = (RegisterClassW_fn)Iat_hook::detour_iat_ptr("RegisterClassW", (void*)hk_RegisterClassW, ole32);
+                    else
+                        Iat_hook::detour_iat_ptr("RegisterClassW", (void*)hk_RegisterClassW, ole32);
+                    if (oRegisterClassExA == NULL)
+                        oRegisterClassExA = (RegisterClassExA_fn)Iat_hook::detour_iat_ptr("RegisterClassExA", (void*)hk_RegisterClassExA, ole32);
+                    else
+                        Iat_hook::detour_iat_ptr("RegisterClassExA", (void*)hk_RegisterClassExA, ole32);
+                    if (oRegisterClassExW == NULL)
+                        oRegisterClassExW = (RegisterClassExW_fn)Iat_hook::detour_iat_ptr("RegisterClassExW", (void*)hk_RegisterClassExW, ole32);
+                    else
+                        Iat_hook::detour_iat_ptr("RegisterClassExW", (void*)hk_RegisterClassExW, ole32);
+                    if (oGetActiveWindow == NULL)
+                        oGetActiveWindow = (GetActiveWindow_fn)Iat_hook::detour_iat_ptr("GetActiveWindow", (void*)hk_GetActiveWindow, ole32);
+                    else
+                        Iat_hook::detour_iat_ptr("GetActiveWindow", (void*)hk_GetActiveWindow, ole32);
                 }
+
+                HookImportedModules();
             }
         }
-        break;
-        case DLL_PROCESS_DETACH:
-        {
-            if (mFPSLimitMode == FrameLimiter::FPSLimitMode::FPS_ACCURATE)
-                timeEndPeriod(1);
+    }
+    break;
+    case DLL_PROCESS_DETACH:
+    {
+        if (mFPSLimitMode == FrameLimiter::FPSLimitMode::FPS_ACCURATE)
+            timeEndPeriod(1);
 
-            if (d3d9dll)
-                FreeLibrary(d3d9dll);
-        }
-        break;
+        if (d3d9dll)
+            FreeLibrary(d3d9dll);
+    }
+    break;
     }
     return true;
 }
@@ -1398,14 +1406,14 @@ int WINAPI Direct3D9EnableMaximizedWindowedModeShim(BOOL mEnable)
     return m_pDirect3D9EnableMaximizedWindowedModeShim(mEnable);
 }
 
-IDirect3D9 *WINAPI Direct3DCreate9(UINT SDKVersion)
+IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion)
 {
     if (!m_pDirect3DCreate9)
     {
         return nullptr;
     }
 
-    IDirect3D9 *pD3D9 = m_pDirect3DCreate9(SDKVersion);
+    IDirect3D9* pD3D9 = m_pDirect3DCreate9(SDKVersion);
 
     if (pD3D9)
     {
@@ -1415,7 +1423,7 @@ IDirect3D9 *WINAPI Direct3DCreate9(UINT SDKVersion)
     return nullptr;
 }
 
-HRESULT WINAPI Direct3DCreate9Ex(UINT SDKVersion, IDirect3D9Ex **ppD3D)
+HRESULT WINAPI Direct3DCreate9Ex(UINT SDKVersion, IDirect3D9Ex** ppD3D)
 {
     if (!m_pDirect3DCreate9Ex)
     {
