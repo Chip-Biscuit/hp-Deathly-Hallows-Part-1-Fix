@@ -1,13 +1,5 @@
 # hp-Deathly-Hallows-Part-1-Fix
 
-This is the Harry Potter and the Deathly Hallows Part 1 d3d9 wrapper which is based from 13AG d3d9.dll wrapper.
-
-https://github.com/ThirteenAG/d3d9-wrapper
-
-Please see this youtube video for an in depth tutorial on the fix  
-
-https://www.youtube.com/watch?v=B1HhMPvchx0&t=16s
-
 simply go to releases download hp7fix.zip put the d3d9.dll and d3d9.ini into your game folder next to the game exe and your good to go 
 
 FOV is edited so that its not so zoomed in with this fix
@@ -31,3 +23,11 @@ Team:
 Chip, JokerAlex21, Blankname.
 
 credit to JagoTu for finding fps.
+
+This is the Harry Potter and the Deathly Hallows Part 1 d3d9 wrapper which is based from 13AG d3d9.dll wrapper.
+
+https://github.com/ThirteenAG/d3d9-wrapper
+
+Please see this youtube video for an in depth tutorial on the fix  
+
+https://www.youtube.com/watch?v=B1HhMPvchx0&t=16s
