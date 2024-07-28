@@ -8,7 +8,9 @@ you can edit settings in d3d9.ini
 
 Default aspect ratio is 0 which is (16:9)
 
-Default for FPS cap is 60 you can change it as you like or uncap with 0 
+Default for FPS cap is 60 you can change it as you like or uncap with 0, the game will start with 30fps you can hit "9" on your keyboard (not the numpad) to toggle between 30 original fps and the fps you choose in the ini.
+this is because there is issues with uncapping fps tied to the menus so you can toggle around these issues if you wish now using the "9" key toggle. so when you get into the game hit "9" and it will go to the uncapped fps.
+if pressing "9" doesnt work the first time you press it then just press it again untill the fps changes for you. then after it will just go between 30 and the fps you set in the ini.
 
 if you would like to leave feedback or submit a bug please use the form provided:
 
