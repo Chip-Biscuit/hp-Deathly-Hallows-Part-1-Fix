@@ -12,6 +12,8 @@ Default for FPS cap is 60 you can change it as you like or uncap with 0, the gam
 this is because there is issues with uncapping fps tied to the menus so you can toggle around these issues if you wish now using the "9" key toggle. so when you get into the game hit "9" and it will go to the uncapped fps.
 if pressing "9" doesnt work the first time you press it then just press it again untill the fps changes for you. then after it will just go between 30 and the fps you set in the ini.
 
+if you want the fixes without the hotkey to toggle fps use hp7fixNOTOGGLE.zip and hp7fixOriginalFOVNOTOGGLE.zip its the exact same as above but wont have the option to toggle fps using a hotkey it will just be uncapped to 60fps always.
+
 if you would like to leave feedback or submit a bug please use the form provided:
 
 https://docs.google.com/forms/d/e/1FAIpQLSfiVfpEi4ontT0c7yJbLIi3ZpCRH30OIE8jp8SGqIf09gdsxw/viewform?usp=sharing
