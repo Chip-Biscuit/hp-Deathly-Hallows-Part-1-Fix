@@ -30,4 +30,6 @@ Team:
 
 Chip, JokerAlex21, Blankname.
 
+credit to Elisha Riedlinger for the base wrapper and 13 AG.
+
 credit to JagoTu for finding fps.
