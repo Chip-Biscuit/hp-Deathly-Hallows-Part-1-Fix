@@ -18,9 +18,9 @@ Default aspect ratio is 0 which is (16:9)
 
 Default for FPS cap is 60 you can change it as you like or uncap with 0 
 
-if you would like to leave feedback or submit a bug please use the form provided:
+If you have any issues please go to discord for help 
 
-https://docs.google.com/forms/d/e/1FAIpQLSfiVfpEi4ontT0c7yJbLIi3ZpCRH30OIE8jp8SGqIf09gdsxw/viewform?usp=sharing
+https://discord.gg/pZwkHrTF8X
 
 brought to you by Fix Enhancers 
 
